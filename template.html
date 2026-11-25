@@ -4,7 +4,8 @@
 :root{--bg:#0a0a0a;--card:#151515;--line:#2c2c2c;--red:#cc0000;--tx:#f4f4f4;--mu:#b5b5b5;--ok:#2e9e5b}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.65 "Segoe UI",Arial,sans-serif}
 header{display:flex;align-items:center;gap:14px;padding:16px 22px;border-bottom:1px solid var(--line)}
-.logo{width:46px;height:46px;border:4px solid var(--red);border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:14px}
+.logo{width:56px;height:56px;border-radius:50%;display:block}
+textarea{width:100%;min-height:110px;padding:12px;background:#000;border:1px solid var(--line);border-radius:8px;color:var(--tx);font:inherit;resize:vertical}audio{width:100%;margin:6px 0}.au{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin:16px 0}.au h3{margin:0 0 4px;font-size:18px}
 header h1{font-size:19px;margin:0}header small{color:var(--mu)}
 #gate{max-width:420px;margin:9vh auto;padding:0 20px}#gate h2{font-size:26px;margin:0 0 6px}
 input{width:100%;padding:12px;margin:8px 0;background:#000;border:1px solid var(--line);border-radius:8px;color:var(--tx);font:inherit}
@@ -24,9 +25,9 @@ main{flex:1;min-width:0}main h2{font-size:28px;margin:0 0 10px}main li{margin:5p
 @media(min-width:760px){#app.show{display:flex}}@media(max-width:759px){#app.show{display:block}.nv{display:flex;overflow-x:auto;margin-bottom:12px}.nv a{white-space:nowrap;border-left:0;border-bottom:3px solid var(--line)}}
 @media(prefers-reduced-motion:no-preference){.opt{transition:background .15s}}
 </style></head><body>
-<header><div class="logo">ADA</div><div><h1>Greek Audio Annotation Training</h1><small>Accurate Data Annotator</small></div></header>
-<section id="gate"><h2>Welcome, annotator</h2><p>Enter the full name and invitation code you received by email.</p>
-<label for="nm">Full name</label><input id="nm" autocomplete="off"><label for="cd">Invitation code</label><input id="cd" autocomplete="off">
+<header><img class="logo" src="ADALogo/ADA-Logo-header.png" alt="ADA logo" width="56" height="56"><div><h1>Greek Audio Annotation Training</h1><small>Accurate Data Annotator</small></div><div id="tm" style="margin-left:auto;color:var(--mu);font-weight:700"></div></header>
+<section id="gate"><h2>Welcome, annotator</h2><p>Enter the access name and access code you received by email, exactly as written.</p>
+<label for="nm">Access name</label><input id="nm" autocomplete="off"><label for="cd">Access code</label><input id="cd" autocomplete="off">
 <div id="err" role="alert"></div><button id="go">Start training</button></section>
 <div id="app"><nav class="nv" id="nv"></nav><main><div class="bar"><i id="pb" style="width:0"></i></div><div id="ct"></div></main></div>
 <script>
@@ -37,14 +38,14 @@ try{st=JSON.parse(localStorage.getItem("adaGrTr")||"{}")}catch(e){}
 const save=()=>{try{localStorage.setItem("adaGrTr",JSON.stringify(st))}catch(e){}};
 async function open(){
  const n=norm($("nm").value),c=$("cd").value.toUpperCase().replace(/[^A-Z0-9]/g,"");$("err").textContent="";
- if(!n||!c){$("err").textContent="Enter both your full name and your code.";return}
+ if(!n||!c){$("err").textContent="Enter both the access name and the access code.";return}
  $("go").disabled=true;$("go").textContent="Checking...";
  try{const base=await crypto.subtle.importKey("raw",E.encode(n+"|"+c),"PBKDF2",false,["deriveKey"]);
   const key=await crypto.subtle.deriveKey({name:"PBKDF2",salt:d(U[0][0]),iterations:IT,hash:"SHA-256"},base,{name:"AES-GCM",length:256},false,["decrypt"]);
   let K=null;for(const u of U){try{const k=await crypto.subtle.deriveKey({name:"PBKDF2",salt:d(u[0]),iterations:IT,hash:"SHA-256"},base,{name:"AES-GCM",length:256},false,["decrypt"]);K=await crypto.subtle.decrypt({name:"AES-GCM",iv:d(u[1])},k,d(u[2]));break}catch(e){}}
   if(!K)throw 0;const mk=await crypto.subtle.importKey("raw",K,"AES-GCM",false,["decrypt"]),[iv,ct]=P.split(".");
   S=JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:"AES-GCM",iv:d(iv)},mk,d(ct))));
-  $("gate").style.display="none";$("app").className="show";$("app").style.display="";draw()
+  $("gate").style.display="none";$("app").className="show";$("app").style.display="";draw();startT()
  }catch(e){$("err").textContent="Name or code not recognised. Check the spelling and try again.";$("go").disabled=false;$("go").textContent="Start training"}}
 $("go").onclick=open;$("cd").onkeydown=e=>{if(e.key==="Enter")open()};
 const done=i=>S[i].q.every((_,j)=>st[i+"_"+j]!==undefined)&&(S[i].q.length>0||st["v"+i]);
@@ -58,6 +59,12 @@ function draw(){
  h+=`<div class="row">${cur>0?'<button id="pv">Back</button>':""}${cur<S.length-1?'<button id="nx">Next section</button>':""}</div>`;
  $("ct").innerHTML=h;
  document.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{if(st[cur+"_"+b.dataset.j]!==undefined)return;st[cur+"_"+b.dataset.j]=+b.dataset.k;save();draw()});
+ document.querySelectorAll("textarea[data-t]").forEach(x=>{x.value=(st.tx||{})[x.dataset.t]||"";x.oninput=()=>{st.tx=st.tx||{};st.tx[x.dataset.t]=x.value;save()}});
  if(!S[cur].q.length){st["v"+cur]=1;save()}
  if($("pv"))$("pv").onclick=()=>{cur--;draw();scrollTo(0,0)};if($("nx"))$("nx").onclick=()=>{cur++;draw();scrollTo(0,0)}}
+const LIM=4*36e5;let TI;
+function closed(){clearInterval(TI);S=[];$("ct").innerHTML="";$("nv").innerHTML="";$("app").style.display="none";$("app").className="";$("tm").textContent="";$("gate").style.display="";$("gate").innerHTML="<h2>Training time has ended</h2><p>Your 4 hours are over and the training is closed. Contact your ADA lead if you need help.</p>"}
+function tick(){const l=LIM-(Date.now()-st.t0);if(l<=0){closed();return}const m=Math.ceil(l/6e4);$("tm").textContent="Time left: "+Math.floor(m/60)+"h "+String(m%60).padStart(2,"0")+"m"}
+function startT(){if(!st.t0){st.t0=Date.now();save()}tick();TI=setInterval(tick,1000)}
+if(st.t0&&Date.now()-st.t0>=LIM)closed();
 </script></body></html>
