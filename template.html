@@ -59,7 +59,10 @@ function draw(){
  h+=`<div class="row">${cur>0?'<button id="pv">Back</button>':""}${cur<S.length-1?'<button id="nx">Next section</button>':""}</div>`;
  $("ct").innerHTML=h;
  document.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{if(st[cur+"_"+b.dataset.j]!==undefined)return;st[cur+"_"+b.dataset.j]=+b.dataset.k;save();draw()});
- document.querySelectorAll("textarea[data-t]").forEach(x=>{x.value=(st.tx||{})[x.dataset.t]||"";x.oninput=()=>{st.tx=st.tx||{};st.tx[x.dataset.t]=x.value;save()}});
+ document.querySelectorAll("[data-t]").forEach(x=>{x.value=(st.tx||{})[x.dataset.t]||"";x.oninput=()=>{st.tx=st.tx||{};st.tx[x.dataset.t]=x.value;save()}});
+
+ const txt=()=>{const g=k=>(st.tx||{})[k]||"";return "ADA Greek Annotator - Transcripts\nTrainee: "+g("name")+"\n\n"+[0,1,2].map(i=>"=== Audio "+(i+1)+" ===\n"+g(i)).join("\n\n")+"\n"};
+ if($("cpb")){$("cpb").onclick=async()=>{try{await navigator.clipboard.writeText(txt());$("cpm").textContent="Copied."}catch(e){$("cpm").textContent="Copy failed. Use Download instead."}};$("dlb").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+txt()],{type:"text/plain;charset=utf-8"}));a.download="greek-transcripts.txt";a.click();$("cpm").textContent="Downloaded."}}
  if(!S[cur].q.length){st["v"+cur]=1;save()}
  if($("pv"))$("pv").onclick=()=>{cur--;draw();scrollTo(0,0)};if($("nx"))$("nx").onclick=()=>{cur++;draw();scrollTo(0,0)}}
 const LIM=4*36e5;let TI;
